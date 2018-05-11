@@ -14,7 +14,7 @@ def user_login(request):
 
             if user:
                 login(request,user)
-                return HttpResponse("欢迎您，登录成功")
+                return HttpResponse("欢迎您，登录成功!")
             else:
                 return HttpResponse("用户名或者密码错误")
         else:
