@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.http import HttpResponse,HttpResponseRedirect
 from django.contrib.auth import authenticate,login
 from .forms import LoginForm,RegistrationForm,UserProfileForm
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 # Create your views here.
 
 def user_login(request):
