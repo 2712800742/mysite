@@ -1,6 +1,10 @@
 from django.shortcuts import render
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+from django.http import HttpResponse
 from django.core.paginator import Paginator,PageNotAnInteger,EmptyPage
 from .models import ArticleColumn,ArticlePost
 
@@ -26,7 +30,7 @@ def article_titles(request,username=None):
         current_page = paginator.page(paginator.num_pages)
         articles = current_page.object_list
     if username:
-        return render(request,'article/list/author_articles.html',{"article":articles,
+        return render(request,'article/list/author_articles.html',{"articles":articles,
                                                                    "page":current_page,"userinfo":userinfo,
                                                                    "user":user})
     return render(request,'article/list/article_titles.html',{'articles':articles,
@@ -35,3 +39,21 @@ def article_titles(request,username=None):
 def article_detail(request,id,slug):
     article = get_object_or_404(ArticlePost, id=id, slug=slug)
     return render(request,"article/list/article_detail.html",{"article":article})
+
+@csrf_exempt
+@require_POST
+@login_required(login_url='/account/login/')
+def like_article(request):
+    article_id = request.POST.get('id')
+    action = request.POST.get("action")
+    if article_id and action:
+        try:
+            article = ArticlePost.objects.get(id=article_id)
+            if action =='like':
+                article.user_like.add(request.user)
+                return HttpResponse('1')
+            else:
+                article.user_like.remove(request.user)
+                return HttpResponse('2')
+        except:
+            return HttpResponse("no")
