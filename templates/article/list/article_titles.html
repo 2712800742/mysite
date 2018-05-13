@@ -9,9 +9,9 @@
     <div class="container">
     {% for article in articles %}
         <div class="list-group">
-            <a href="{{ article.get_absolute_url }}" class="list-group-item active">
+            <a href="{{ article.get_url_path }}" class="list-group-item active">
                 <h4 class="list-group-item-heading">{{ article.title }}</h4>
-                <p class="list-group-item-text">作者：{{ article.author.username }}</p>
+                <p class="list-group-item-text">作者：<a href="{% url 'article:author_artitles' article.author.username %}"> {{ article.author.username }}</a></p>
                 <p class="list-group-item-text">概 要：{{ article.body|slice:'70'|linebreaks }}</p>
             </a>
         </div>
