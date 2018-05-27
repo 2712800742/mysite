@@ -7,6 +7,10 @@ from django.views.decorators.http import require_POST
 from django.http import HttpResponse
 from django.core.paginator import Paginator,PageNotAnInteger,EmptyPage
 from .models import ArticleColumn,ArticlePost
+import redis
+from django.conf import settings
+
+r=redis.StrictRedis(host=settings.REDIS_HOST,port=settings.REIDS_PORT,db=settings.REDIS_DB)
 
 def article_titles(request,username=None):
     if username:
