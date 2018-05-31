@@ -22,17 +22,8 @@ def article_titles(request,username=None):
             userinfo=None
     else:
         articles_title=ArticlePost.objects.all()
-    paginator=Paginator(articles_title,2)
-    page=request.GET.get('page')
-    try:
-        current_page = paginator.page(page)
-        articles = current_page.object_list
-    except PageNotAnInteger:
-        current_page = paginator.page(1)
-        articles = current_page.object_list
-    except EmptyPage:
-        current_page = paginator.page(paginator.num_pages)
-        articles = current_page.object_list
+
+
     if username:
         return render(request,'article/list/author_articles.html',{"articles":articles,
                                                                    "page":current_page,"userinfo":userinfo,
@@ -42,7 +33,13 @@ def article_titles(request,username=None):
 
 def article_detail(request,id,slug):
     article = get_object_or_404(ArticlePost, id=id, slug=slug)
-    return render(request,"article/list/article_detail.html",{"article":article})
+    total_views = r.incr("article:{}:views".format(article.id))
+    r.zincrby('article_ranking',article.id,1)
+    article_ranking=r.zrange('article_ranking',0,-1,desc=True)[:10]
+    article_ranking_ids = [int(id) for id in article_ranking]
+    most_viewed = list(ArticlePost.objects.filter(id__in=article_ranking_ids))
+    most_viewed.sort(key=lambda x: article_ranking_ids.index(x.id))
+    return render(request,"article/list/article_detail.html",{"article":article,"total_views":total_views,"most_viewed":most_viewed})
 
 @csrf_exempt
 @require_POST
