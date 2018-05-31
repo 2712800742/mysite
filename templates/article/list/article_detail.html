@@ -44,6 +44,43 @@
             <p class="text-center">还没有人对此文章表态</p>
         {% endfor %}
     </div>
+    <hr>
+    <div>
+        <h3><span class="glyphicon glyphicon-bullhorn"></span>本文有{{ article.comments.count }}
+        评论</h3>
+        {% for comment in article.comments.all %}
+            <div>
+            <p ><strong>{{ comment.commentator }}</strong>说：{{ comment.body }}<span style="margin-left: 10px">{{ comment.created }}</span>
+            <a href="javascript:void(0);" onclick="huifu(this,{{ comment.id }})">回复</a>
+            </p>
+            {% for comtocom in comment.comtocom.all %}
+                <p style="margin-left: 40px;"><strong>{{ comtocom.commentator }}</strong>回复<strong>{{ comtocom.commented }}</strong>：
+                    {{ comment.body }}<span style="margin-left: 10px">{{ comment.created }}</span>
+                </p>
+            {% empty %}
+                <hr>
+            {% endfor %}
+            </div>
+        {% empty %}
+            <p>没有人评论</p>
+        {% endfor %}
+    <h3><span class="glyphicon glyphicon-send"></span>看文章，发评论，不要沉默 </h3>
+    <form action="." method="post" class="form-horizontal" role="form">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label for="inputEmail3" class="col-sm-2 control-label">评论</label>
+            <div class="col-sm-10">
+                {{ comment_form.body }}
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-sm-offset-2 col-sm-10">
+                <p><input type="submit" name="" value="发评论" class="btn btn-primary"></p>
+            </div>
+        </div>
+    </form>
+    </div>
     </div>
     <div class="col-md-3">
         <p class="text-center">
@@ -82,6 +119,22 @@
                 sequenceDiagram:true,
             });
         });
+
+        function huifu(th,comment_id) {
+comment__id=comment_id
+            $(th).parent().append('<form><input type="text" style="width:500px; height:25px;margin-right: 10px;"/>'+
+                '<input type="button" onclick="fabiao(this)" value="发表"></form>')
+        }
+
+        function fabiao(th) {
+            var body=$(th).prev().val();
+            $.ajax({
+                url:"{{ article.get_url_path  }}",
+                type:"POST",
+                data:{"bodys":body,"comment_id":comment__id}
+            });
+            $(th).parent().remove()
+        }
 
         function like_article(id,action) {
             $.ajax({

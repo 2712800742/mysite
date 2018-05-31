@@ -15,7 +15,7 @@ class ArticleColumn(models.Model):
         return self.column
 
 class ArticlePost(models.Model):
-    author = models.ForeignKey(User,related_name="article")
+    author = models.ForeignKey(User,related_name="article",on_delete=models.CASCADE)
     title = models.CharField(max_length=200)
     slug = models.SlugField(max_length=500)
     column = models.ForeignKey(ArticleColumn,related_name="article_column")
@@ -43,7 +43,7 @@ class ArticlePost(models.Model):
 
 
 class Comment(models.Model):
-    article=models.ForeignKey(ArticlePost,related_name="comments")
+    article=models.ForeignKey(ArticlePost,related_name="comments",on_delete=models.CASCADE)
     commentator = models.CharField(max_length=90)
     body = models.TextField()
     created = models.DateTimeField(auto_now_add=True)
@@ -53,3 +53,16 @@ class Comment(models.Model):
 
     def __str__(self):
         return "Comment by {0} on {1}".format(self.commentator.username,self.article)
+
+class CommentToComment(models.Model):
+    comment = models.ForeignKey(Comment,related_name="comtocom",on_delete=models.CASCADE)
+    commentator = models.CharField(max_length=90)
+    commented = models.CharField(max_length=90)
+    body = models.TextField()
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ("created",)
+
+    def __str__(self):
+        return "comment {} to {}".format(self.commentator,self.commented)
