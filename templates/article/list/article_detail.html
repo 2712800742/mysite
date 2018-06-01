@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load staticfiles %}
+{% load article_tags %}
 {% block title %}{{ article.title }}{% endblock %}
 
 {% block content %}
@@ -18,13 +19,14 @@
                 已被浏览{{ total_views }}次
             </span>
         </p>
+        <p><span style="margin-right: 10px;"><strong>标签：</strong></span>
+        {{ article.article_tag.all|join:',' }}
+        </p>
     </header>
 
         <link rel="stylesheet" href="{% static 'editor/css/editormd.preview.css' %}"/>
         <div id="editormd-view">
-            <textarea id="append-text" style="display: none;">
-            {{ article.body }}
-            </textarea>
+            {{ article.body|markdown }}
         </div>
     <div>
         <p class="text-center">
@@ -51,16 +53,18 @@
         {% for comment in article.comments.all %}
             <div>
             <p ><strong>{{ comment.commentator }}</strong>说：{{ comment.body }}<span style="margin-left: 10px">{{ comment.created }}</span>
-            <a href="javascript:void(0);" onclick="huifu(this,{{ comment.id }})">回复</a>
+            <a href="javascript:void(0);" onclick="huifu(this,{{ comment.id }},-1)">回复</a>
             </p>
             {% for comtocom in comment.comtocom.all %}
                 <p style="margin-left: 40px;"><strong>{{ comtocom.commentator }}</strong>回复<strong>{{ comtocom.commented }}</strong>：
-                    {{ comment.body }}<span style="margin-left: 10px">{{ comment.created }}</span>
+                    {{ comtocom.body }}<span style="margin-left: 10px">{{ comtocom.created }}</span>
+                <a href="javascript:void(0);" onclick="huifu(this,{{ comment.id }},{{ comtocom.id }})">回复</a>
                 </p>
             {% empty %}
                 <hr>
             {% endfor %}
             </div>
+            <hr>
         {% empty %}
             <p>没有人评论</p>
         {% endfor %}
@@ -94,6 +98,18 @@
             {% endfor %}
 
         </ol>
+    <hr>
+    <p class="text-center"><h3>最新文章</h3></p>
+    {% latest_articles 4 %}
+    <hr>
+    <p class="text-center"><h3>相似文章</h3></p>
+    {% for similar in similar_articles %}
+    <p><a href="{{ similar.get_url_path }}">{{ similar.title }}</a> </p>
+    {% empty %}
+        <p>没有相似的文章</p>
+    {% endfor %}
+
+    </div>
     </div>
     </div>
         <script src="{% static 'js/jquery-3.2.1.js' %}"></script>
@@ -120,8 +136,9 @@
             });
         });
 
-        function huifu(th,comment_id) {
-comment__id=comment_id
+        function huifu(th,comment_id,comtocom_id) {
+            comment__id=comment_id;
+            comtocom__id = comtocom_id;
             $(th).parent().append('<form><input type="text" style="width:500px; height:25px;margin-right: 10px;"/>'+
                 '<input type="button" onclick="fabiao(this)" value="发表"></form>')
         }
@@ -131,9 +148,10 @@ comment__id=comment_id
             $.ajax({
                 url:"{{ article.get_url_path  }}",
                 type:"POST",
-                data:{"bodys":body,"comment_id":comment__id}
+                data:{"bodys":body,"comment_id":comment__id,"comtocom_id":comtocom__id}
             });
             $(th).parent().remove()
+            window.location.reload();
         }
 
         function like_article(id,action) {

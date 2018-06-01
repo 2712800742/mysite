@@ -1,12 +1,13 @@
 from django.shortcuts import render
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
+from django.db.models import Count
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from django.http import HttpResponse
 from django.core.paginator import Paginator,PageNotAnInteger,EmptyPage
-from .models import ArticleColumn,ArticlePost,Comment,CommentToComment
+from .models import ArticleColumn,ArticlePost,Comment,CommentToComment,ArticleTag
 from .forms import CommentForm
 import redis
 from django.conf import settings
@@ -30,7 +31,9 @@ def article_titles(request,username=None):
                                                                    "user":user})
     return render(request,'article/list/article_titles.html',{'articles':articles_title})
 
+
 @csrf_exempt
+@login_required(login_url='/account/login/')
 def article_detail(request,id,slug):
     article = get_object_or_404(ArticlePost, id=id, slug=slug)
     total_views = r.incr("article:{}:views".format(article.id))
@@ -53,13 +56,22 @@ def article_detail(request,id,slug):
             new_comment = CommentToComment()
             new_comment.comment=comment
             new_comment.commentator=request.user
-            new_comment.body=request.POST['body']
-            new_comment.commented=comment.commentator
+            new_comment.body=request.POST['bodys']
+            if request.POST['comtocom_id'] == '-1':
+                new_comment.commented=comment.commentator
+            else:
+                new_comment.commented = CommentToComment.objects.get(id=request.POST['comtocom_id']).commentator
             new_comment.save()
     else:
         comment_form = CommentForm()
 
-    return render(request,"article/list/article_detail.html",{"article":article,"total_views":total_views,"most_viewed":most_viewed,"comment_form":comment_form})
+    article_tags = article.article_tag.values_list("tag",flat=True)
+    article_tag_ids=ArticleTag.objects.filter(tag__in=article_tags).values_list("id",flat=True)
+    similar_articles = ArticlePost.objects.filter(article_tag__in=article_tag_ids).\
+        exclude(id=article.id)
+    similar_articles = similar_articles.annotate(same_tags=Count("article_tag")).order_by("-same_tags","-created")[:4]
+    return render(request,"article/list/article_detail.html",{"article":article,"total_views":total_views,"most_viewed":most_viewed,"comment_form":comment_form,
+                                                              "similar_articles":similar_articles})
 
 @login_required(login_url='/account/login/')
 @csrf_exempt
