@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'blog',
     'account',
     'article',
+    'image',
 ]
 
 MIDDLEWARE = [
@@ -127,6 +128,9 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR,'static'),
 )
+
+MEDIA_URL = "/meida/"
+MEDIA_ROOT = os.path.join(BASE_DIR,'media/')
 
 LOGIN_REDIRECT_URL='/home/'
 LOGOUT_REDIRECT_URL='/account/login/'
