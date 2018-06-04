@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block titile %}
+存数据
+{% endblock %}
+
+{% block content %}
+<form action="{% url 'course:course' %}" method="post">
+{% csrf_token %}
+{{ crouse.as_p }}
+<input type="submit" value="提交">
+</form>
+{% endblock %}
